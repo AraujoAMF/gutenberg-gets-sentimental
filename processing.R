@@ -12,19 +12,12 @@ library(textstem)
 library(lexicon)
 library(ggdendro)
 library(treemapify)
+library(visNetwork)
 #nrc - 8 sentiments
 #bing - positive/negative
 #affin = -5/5
 gutenberg_base <- data.table(gutenberg_works())
 gutenberg_base <- gutenberg_base[gutenberg_id > 0, .(gutenberg_id, title, author)]
-
-tokenizer <- function(x, n) {
-  NGramTokenizer(x ,Weka_control(min = n, max = n))
-}
-
-
-
-
 
 gutenberg_download2 <- function(x) {
   data.table(gutenberg_download(x))
@@ -51,10 +44,14 @@ preprocess_gutenberg <- function(raw_text) {
 }
 #text_corpus <- preprocess_gutenberg(50)
 
-make_most_frequent_words <- function(text1) {
+make_most_frequent_ngrams <- function(text1, n = 1) {
+
+  tokenizer <- function(x) {
+    NGramTokenizer(x ,Weka_control(min = n, max = n))
+  }
   
   text_corpus <- VCorpus(VectorSource(text1))
-  text_m <-  TermDocumentMatrix(text_corpus)
+  text_m <-  TermDocumentMatrix(text_corpus, control = list(tokenize = tokenizer))
   text_m <- as.matrix(text_m)
   
   term_frequency <- rowSums(text_m)
@@ -66,7 +63,7 @@ make_most_frequent_words <- function(text1) {
   #setnames(nrc, "word", "Word")
   #term_frequency_dt <- merge(term_frequency_dt, nrc, by = "Word", all.x =  TRUE)
   setorder(term_frequency_dt, N)
-  term_frequency_dt[, Word := factor(Word, levels = rev(names(term_frequency)), labels = rev(names(term_frequency)))]
+  term_frequency_dt[, Word := factor(Word, levels = Word, labels = Word)]
   #term_frequency_dt[, n_times := .N, Word]
   #term_frequency_dt[, N := N/n_times]
   
@@ -81,7 +78,7 @@ make_most_frequent_words <- function(text1) {
   g <- ggplot(term_frequency_dt)
   g <- g + geom_bar(aes(x = Word, y = N, fill = Word), stat = "identity")
   g <- g + coord_flip()
-  g <- g + ggtitle("Top 25 Words")
+  g <- g + ggtitle(sprintf("Top %s-grams", n))
   g
 }
 
@@ -130,12 +127,43 @@ make_treemap <- function(text1) {
   
   text_dt <- data.table(word =  unlist(str_split(text1, " ")))
   text_dt <- text_dt[, .N, word]
+  
   nrc <- data.table(get_sentiments("nrc"))
+  setorder(nrc, sentiment)
+  
+  nrc <- nrc[, .(sentiment = paste(unique(sentiment), collapse = " ")),  word]
   setkey(text_dt, word)
   text_dt <- text_dt[nrc, nomatch = 0]
-  
-  setorder(text_dt, sentiment)
+  text_dt <- text_dt[, .(N = sum(N)), sentiment]
+  setorder(text_dt, -N)
   g <- ggplot(text_dt)
   g <- g + geom_treemap(aes(area = N, fill = sentiment))
+  g <- g + geom_treemap_text(aes(area = N, label = sentiment))
+  g <- g + ggtitle("NRC Sentiments Treemap")
+  g <- g+ theme(legend.position="none")
   g
+}
+
+if(FALSE) {
+  
+  source("/home/allan/Documentos/gutenberg_vis/processing.R")
+  raw_text <- gutenberg_download2(1)
+  text1 <- preprocess_gutenberg(raw_text)
+  n <- 2
+  tokenizer <- function(x) {
+    NGramTokenizer(x ,Weka_control(min = n, max = n))
+  }
+  
+  text_corpus <- VCorpus(VectorSource(text1))
+  text_m <-  TermDocumentMatrix(text_corpus, control = list(tokenize = tokenizer))
+  text_m <- as.matrix(text_m)
+  term_frequency <- rowSums(text_m)
+  term_frequency <- sort(term_frequency, decreasing = TRUE)
+  term_frequency_dt <- data.table(Word = names(term_frequency), N = term_frequency)
+  term_frequency_dt[, from := str_split(Word, " ")[[1]][1], Word]
+  term_frequency_dt[, to := str_split(Word, " ")[[1]][2], Word]
+  nodes <- unique(term_frequency_dt[N >= 3, .(id = (c(from, to)))], by = NULL)
+  edges <- term_frequency_dt[N >= 3, .(from, to)]
+  visNetwork(nodes, edges )
+  
 }
