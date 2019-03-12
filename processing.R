@@ -27,7 +27,15 @@ gutenberg_download2 <- function(x) {
 
 preprocess_gutenberg <- function(raw_text) {
   
-  text1 <- raw_text[, text]
+  #sometimes there is some coments before the original text
+  #and the original text start with all words capitalized
+  #sometimes no
+  s <- max(1, raw_text[, which(grepl("^[A-Z ]+$", text))][1], na.rm = TRUE)
+  
+  text1 <- raw_text[s:.N, text]
+  
+  
+  
   text1[text1 == ""] <- '\n'
   #text1 <- strsplit(paste(text1, collapse = ' '), split = '\\.')[[1]]
   text1 <- strsplit(paste(text1, collapse = ' '), split = '\n')[[1]]
