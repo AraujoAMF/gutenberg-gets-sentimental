@@ -14,8 +14,8 @@ libraries inside the code. You only need to have the "processing.R" file somewhe
 
 You only need to by author or title and figure out what is the gutenberg id of the book and put into the box and the app will preprocess
 the text and make the plot to you derive insights about the sentiments of the book. With the topd 1,23-grams, the narrative arc with
-the ![polarity score](https://www.rdocumentation.org/packages/qdap/versions/2.3.2/topics/polarity), the ![NRC](https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm)
-sentiments treemap. And a dendogram with the ![hierarchical clustering](https://en.wikipedia.org/wiki/Hierarchical_clustering) of the text,
+the [polarity score](https://www.rdocumentation.org/packages/qdap/versions/2.3.2/topics/polarity), the [NRC](https://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm)
+sentiments treemap. And a dendogram with the [hierarchical clustering](https://en.wikipedia.org/wiki/Hierarchical_clustering) of the text,
 using the paragraphs as elements, and try to see wich words appear together.
 
 ![2-grams](2grams.png)
