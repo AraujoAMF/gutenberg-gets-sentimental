@@ -29,7 +29,7 @@ using the paragraphs as elements, and try to see wich words appear together.
 # Further improvements
 
 Actually the preprocessinng step of the data may not be enough to clean the data, so if want to make a more acurated analysis you 
-may need to to do more preprocessing. And the sentiment databases used may not have more erudited words such as found in some books of
+may need to do more preprocessing. And the sentiment databases used may not have more erudited words such as found in some books of
 the Gutenberg Project.
 
 # License
